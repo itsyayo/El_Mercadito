@@ -13,6 +13,7 @@ import com.uam.mercadito.cart.dto.CartItemAddDTO;
 import com.uam.mercadito.cart.dto.CartItemDTO;
 import com.uam.mercadito.product.Product;
 import com.uam.mercadito.product.ProductRepository;
+import com.uam.mercadito.user.AppUser;
 import com.uam.mercadito.user.AppUserRepository; 
 
 import jakarta.transaction.Transactional;
@@ -34,14 +35,14 @@ public class ShoppingCartService {
     // =======================================================
     
     @Transactional
-    public CartDetailDTO getOrCreateCart(Long userId) {
-        Optional<ShoppingCart> optionalCart = cartRepository.findByUserIdAndStatus(userId, PENDING_STATUS);
+    public CartDetailDTO getOrCreateCart(String email) {
+        Optional<ShoppingCart> optionalCart = cartRepository.findByUserEmailAndStatus(email, PENDING_STATUS);
         ShoppingCart cart;
 
         if (optionalCart.isPresent()) {
             cart = optionalCart.get();
         } else {
-            var user = userRepository.findById(userId)
+            var user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
             cart = cartRepository.save(ShoppingCart.builder()
@@ -58,12 +59,15 @@ public class ShoppingCartService {
     // =======================================================
 
     @Transactional
-    public void addItem(Long userId, CartItemAddDTO dto) {
-        ShoppingCart cart = cartRepository.findByUserIdAndStatus(userId, PENDING_STATUS)
-            .orElseGet(() -> cartRepository.save(ShoppingCart.builder().user(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"))).build()));
-
+    public void addItem(String email, CartItemAddDTO dto) {
+        ShoppingCart cart = cartRepository.findByUserEmailAndStatus(email, PENDING_STATUS)
+           .orElseGet(() -> {
+                AppUser user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                return cartRepository.save(ShoppingCart.builder().user(user).build());
+            });
         Product product = productRepository.findById(dto.productId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+            .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (dto.quantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be positive.");
@@ -109,8 +113,8 @@ public class ShoppingCartService {
     }
     
     @Transactional
-    public void removeItem(Long userId, Long itemId) {
-        ShoppingCart cart = cartRepository.findByUserId(userId)
+    public void removeItem(String email, Long itemId) {
+        ShoppingCart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
         CartItem item = itemRepository.findById(itemId)
@@ -127,8 +131,8 @@ public class ShoppingCartService {
     }
     
     @Transactional
-    public void clearCart(Long userId) {
-        ShoppingCart cart = cartRepository.findByUserId(userId)
+    public void clearCart(String email) {
+        ShoppingCart cart = cartRepository.findByUserEmail(email)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
         
         itemRepository.deleteAllByCartId(cart.getId());

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uam.mercadito.cart.dto.CartDetailDTO;
 import com.uam.mercadito.cart.dto.CartItemAddDTO;
+import com.uam.mercadito.user.AppUser;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,8 @@ public class ShoppingCartController {
      * GET /cart
      */
     @GetMapping
-    public CartDetailDTO getCart(@RequestHeader("X-User-Id") Long userId) {
-        return service.getOrCreateCart(userId);
+    public CartDetailDTO getCart(@RequestHeader("X-User-Id") AppUser user) {
+        return service.getOrCreateCart(user.getEmail());
     }
 
     /**
@@ -41,9 +42,9 @@ public class ShoppingCartController {
      */
     @PostMapping("/items")
     @ResponseStatus(HttpStatus.CREATED)
-    public void addItemToCart(@RequestHeader("X-User-Id") Long userId, 
+    public void addItemToCart(@RequestHeader("X-User-Id") AppUser user, 
                               @Valid @RequestBody CartItemAddDTO dto) {
-        service.addItem(userId, dto);
+        service.addItem(user.getEmail(), dto);
     }
 
     /**
@@ -52,9 +53,9 @@ public class ShoppingCartController {
      */
     @DeleteMapping("/items/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeItemFromCart(@RequestHeader("X-User-Id") Long userId, 
+    public void removeItemFromCart(@RequestHeader("X-User-Id") AppUser user, 
                                    @PathVariable Long itemId) {
-        service.removeItem(userId, itemId);
+        service.removeItem(user.getEmail(), itemId);
     }
 
     /**
@@ -63,7 +64,7 @@ public class ShoppingCartController {
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void clearCart(@RequestHeader("X-User-Id") Long userId) {
-        service.clearCart(userId);
+    public void clearCart(@RequestHeader("X-User-Id") AppUser user) {
+        service.clearCart(user.getEmail());
     }
 }
