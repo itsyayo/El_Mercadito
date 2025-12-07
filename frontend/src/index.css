@@ -1,0 +1,22 @@
+/* En Tailwind v4, usamos esta importación única en lugar de las 3 directivas antiguas */
+@import "tailwindcss";
+
+/* IMPORTANTE: 
+  Si tienes un archivo de configuración (tailwind.config.js), Tailwind v4 intentará leerlo.
+  Esta importación asegura que todas las utilidades por defecto (colores, espaciado) estén listas.
+*/
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    /* Ahora bg-gray-100 debería ser reconocido */
+    @apply bg-gray-100 text-gray-900; 
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  a {
+    @apply text-orange-600 hover:text-orange-700 transition-colors;
+  }
+}
